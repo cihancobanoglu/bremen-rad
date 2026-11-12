@@ -1,0 +1,19 @@
+{
+ "name": "Überseestadt Nord",
+ "src": "data/raw/uebersee.json",
+ "dst": "data/level1.json",
+ "prefer": [
+  "Kommodore-Johnsen-Boulevard",
+  "Konsul-Smidt-Straße"
+ ],
+ "waypoints": [
+  [
+   53.103,
+   8.75324
+  ],
+  [
+   53.08696,
+   8.78279
+  ]
+ ]
+}

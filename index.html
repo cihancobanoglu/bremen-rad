@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moin Bremen! – Die Radtour</title>
+<style>
+  :root { --rot: #e2001a; --blau: #14a8e0; --dunkel: #0f1b28; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1b28; font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #fff; user-select: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hidden { display: none !important; }
+
+  /* ---------- Overlays ---------- */
+  .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20;
+    background: linear-gradient(rgba(10,20,32,.72), rgba(10,20,32,.9)), url(assets/photos/ueberseestadt.jpg) center/cover; }
+  .panel { width: min(980px, 94vw); max-height: 96vh; overflow: auto; padding: 26px 34px; text-align: center; }
+  h1 { font-size: clamp(34px, 6vw, 64px); margin: 0; letter-spacing: -1px; }
+  h1 em { font-style: normal; color: var(--rot); background: #fff; padding: 0 12px; border-radius: 8px; }
+  .lead { opacity: .85; margin: 10px 0 4px; font-size: 18px; }
+  #langs { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+  .lang, .lvl { all: unset; cursor: pointer; padding: 6px 16px; border-radius: 99px; background: rgba(255,255,255,.12); font-weight: 600; font-size: 14px; border: 2px solid transparent; }
+  .lang.sel, .lvl.sel { background: #fff; color: #111; } .lvl { font-size: 16px; padding: 8px 18px; } .lvl.sel { border-color: var(--rot); }
+  #levels { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 14px 0 6px; }
+  .level { display: inline-block; margin: 14px 0 6px; padding: 8px 18px; border-radius: 99px; background: rgba(255,255,255,.12); font-weight: 600; }
+  #levelSub { opacity: .75; font-size: 14px; margin-bottom: 16px; }
+  #vehicles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 8px 0 18px; }
+  .veh { all: unset; cursor: pointer; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.15); border-radius: 16px; padding: 14px 16px; text-align: left; transition: .15s; }
+  .veh:hover { background: rgba(255,255,255,.14); }
+  .veh.sel { border-color: var(--rot); background: rgba(226,0,26,.22); box-shadow: 0 0 0 3px rgba(226,0,26,.3); }
+  .veh .ico { font-size: 40px; } .veh h3 { margin: 4px 0; font-size: 20px; } .veh p { margin: 0 0 8px; font-size: 13px; opacity: .8; min-height: 48px; }
+  .stat { display: flex; justify-content: space-between; font-size: 12px; } .stat i { font-style: normal; color: #ffd21a; letter-spacing: 2px; } .stat b { color: rgba(255,255,255,.2); font-weight: 400; }
+  .kmh { margin-top: 6px; font-size: 12px; opacity: .7; }
+  .btn { all: unset; cursor: pointer; background: var(--rot); padding: 14px 44px; border-radius: 99px; font-size: 22px; font-weight: 700; box-shadow: 0 6px 0 #8f0010; transition: .1s; }
+  .btn:hover { transform: translateY(-2px); } .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #8f0010; }
+  .btn.ghost { background: rgba(255,255,255,.15); box-shadow: none; font-size: 16px; padding: 10px 24px; margin-left: 12px; }
+  .keys { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; margin-top: 20px; font-size: 13px; opacity: .9; }
+  kbd { background: #fff; color: #111; border-radius: 5px; padding: 2px 7px; font: 600 12px/1.4 inherit; box-shadow: 0 2px 0 #999; margin-right: 4px; }
+  .credit { margin-top: 16px; font-size: 11px; opacity: .5; }
+  #loading .spin { width: 54px; height: 54px; border: 6px solid rgba(255,255,255,.2); border-top-color: var(--rot); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 18px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stars { font-size: 54px; color: #ffd21a; } .stars span { color: rgba(255,255,255,.2); }
+  #endText { font-size: 18px; line-height: 1.6; margin: 10px 0 24px; }
+  #pause { background: rgba(10,20,32,.6); font-size: 40px; font-weight: 700; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #topLeft { position: absolute; left: 18px; top: 14px; }
+  #hearts { font-size: 30px; color: var(--rot); letter-spacing: 3px; } #hearts span { color: rgba(0,0,0,.35); text-shadow: none; }
+  #street { display: inline-block; margin-top: 6px; background: #0b4ea2; border: 3px solid #fff; border-radius: 6px; padding: 3px 14px; font-weight: 700; font-size: 17px; text-shadow: none; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  #street.pop { animation: pop .5s; } @keyframes pop { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+  #topMid { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); width: min(420px, 40vw); text-align: center; font-size: 13px; }
+  #prog { height: 10px; background: rgba(0,0,0,.4); border-radius: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.5); margin-bottom: 4px; }
+  #progFill { height: 100%; width: 0; background: linear-gradient(90deg, #fff, var(--rot)); }
+  #topRight { position: absolute; right: 18px; top: 14px; text-align: right; }
+  #speedBox { font-size: 15px; } #speed { font-size: 46px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  #time { font-size: 15px; opacity: .9; font-variant-numeric: tabular-nums; }
+  #minimap { position: absolute; right: 18px; top: 96px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 12px rgba(0,0,0,.5); background: #e8e4d8; }
+  #warn { position: absolute; left: 50%; top: 68px; transform: translate(-50%, -20px); opacity: 0; transition: .2s; background: #ffd21a; color: #111; text-shadow: none; font-weight: 800; font-size: 20px; padding: 8px 22px; border-radius: 8px; border: 3px solid #111; white-space: nowrap; }
+  #warn.show { opacity: 1; transform: translate(-50%, 0); }
+  #warn.big { background: var(--rot); color: #fff; border-color: #fff; font-size: 26px; animation: blink .4s 6 alternate; }
+  @keyframes blink { to { filter: brightness(1.6); } }
+  #toast { position: absolute; left: 50%; top: 34%; transform: translate(-50%, 0) scale(.8); opacity: 0; transition: .18s; font-size: 28px; font-weight: 800; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); } #toast.red { color: #ff5a6a; } #toast.blue { color: #5fe4ff; }
+  #kid { position: absolute; left: 18px; bottom: 26px; display: flex; align-items: flex-end; gap: 8px; opacity: 0; transform: translateY(12px); transition: .25s; }
+  #kid.show { opacity: 1; transform: none; }
+  #kid .face { font-size: 44px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+  #kidText { background: #fff; color: #111; text-shadow: none; padding: 9px 15px; border-radius: 16px 16px 16px 2px; font-weight: 700; font-size: 17px; margin-bottom: 18px; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  #landmark { position: absolute; left: 18px; top: 104px; width: 250px; background: rgba(15,27,40,.92); border-radius: 12px; overflow: hidden; transform: translateX(-120%); transition: .45s; box-shadow: 0 6px 20px rgba(0,0,0,.5); text-shadow: none; }
+  #landmark.show { transform: none; }
+  #landmark img { width: 100%; height: 140px; object-fit: cover; display: block; }
+  #landmark div { padding: 8px 12px 10px; } #landmark b { font-size: 16px; display: block; } #landmark small { opacity: .8; }
+  #landmark .tag { position: absolute; top: 8px; left: 8px; background: var(--rot); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  #nitro { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(460px, 60vw); text-align: center; }
+  #cans { display: flex; justify-content: center; gap: 8px; margin-bottom: 5px; }
+  .can { width: 22px; height: 32px; border-radius: 6px 6px 4px 4px; border: 2px solid rgba(255,255,255,.7); background: rgba(0,0,0,.35); position: relative; }
+  .can::before { content: ""; position: absolute; left: 5px; top: -7px; width: 8px; height: 5px; background: rgba(255,255,255,.7); border-radius: 2px; }
+  .can.on { background: linear-gradient(#7af0ff, #0a9fd8); box-shadow: 0 0 12px #35e0ff; border-color: #fff; }
+  #nitroBar { height: 18px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.75); border-radius: 12px; overflow: hidden; }
+  #nitroFill { height: 100%; width: 0; background: linear-gradient(90deg, #0a7fb0, #35e0ff); transition: width .2s; }
+  #nitroHint { margin-top: 4px; font-size: 13px; font-weight: 600; }
+  #nitro.full #nitroBar { animation: glow .5s infinite alternate; } #nitro.full #nitroHint { color: #5fe4ff; font-size: 16px; animation: glow .5s infinite alternate; }
+  #nitro.active #nitroFill { background: linear-gradient(90deg, #ff7a1a, #ffe14a); transition: none; } #nitro.active #nitroHint { color: #ffe14a; font-size: 18px; }
+  @keyframes glow { to { box-shadow: 0 0 22px #35e0ff; filter: brightness(1.4); } }
+  #count { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); font-size: 130px; font-weight: 900; opacity: 0; transition: opacity .3s; }
+  #count.show { opacity: 1; }
+  #flash { position: absolute; inset: 0; background: radial-gradient(transparent 40%, rgba(226,0,26,.75)); opacity: 0; }
+  #flash.go { animation: fl .7s; } @keyframes fl { 0% { opacity: 1; } 100% { opacity: 0; } }
+  #lines { position: absolute; inset: 0; opacity: 0; transition: opacity .3s; background:
+    radial-gradient(transparent 35%, rgba(53,224,255,.28) 100%),
+    repeating-conic-gradient(from 0deg at 50% 46%, rgba(255,255,255,0) 0 4deg, rgba(255,255,255,.22) 4.4deg 4.8deg, rgba(255,255,255,0) 5.2deg 9deg);
+    -webkit-mask: radial-gradient(transparent 30%, #000 75%); mask: radial-gradient(transparent 30%, #000 75%); }
+  body.nitro #lines { opacity: 1; animation: rot .25s linear infinite; } @keyframes rot { 50% { transform: scale(1.06) rotate(1.5deg); } }
+  #osm { position: absolute; right: 8px; bottom: 6px; font-size: 10px; opacity: .6; }
+  @media (max-width: 760px) { #vehicles { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="lines"></div><div id="flash"></div>
+  <div id="topLeft"><div id="hearts"></div><div id="street">–</div></div>
+  <div id="topMid"><div id="prog"><div id="progFill"></div></div><span id="dist"></span></div>
+  <div id="topRight"><div id="speedBox"><span id="speed">0</span> km/h</div><div id="time">0:00</div></div>
+  <canvas id="minimap" width="170" height="170"></canvas>
+  <div id="warn"></div><div id="toast"></div><div id="count"></div>
+  <div id="landmark"><span class="tag" id="lmTag"></span><img id="lmImg" alt=""><div><b id="lmTitle"></b><small id="lmText"></small></div></div>
+  <div id="kid"><span class="face">👦</span><span id="kidText"></span></div>
+  <div id="nitro"><div id="cans"><div class="can" id="can0"></div><div class="can" id="can1"></div><div class="can" id="can2"></div></div>
+    <div id="nitroBar"><div id="nitroFill"></div></div><div id="nitroHint"></div></div>
+  <div id="osm">Karte © OpenStreetMap-Mitwirkende</div>
+</div>
+
+<div id="menu" class="overlay"><div class="panel">
+  <div id="langs"></div>
+  <h1>Moin <em>Bremen!</em></h1>
+  <p class="lead" id="lead"></p>
+  <div id="levels"></div><div id="levelSub"></div>
+  <div id="vehicles"></div>
+  <button class="btn" id="go"></button>
+  <div class="keys" id="keys"></div>
+  <div class="credit" id="credit"></div>
+</div></div>
+
+<div id="loading" class="overlay hidden"><div class="panel"><div class="spin"></div><h2 id="loadTitle"></h2><p class="lead" id="loadSub"></p></div></div>
+<div id="pause" class="overlay hidden"></div>
+<div id="end" class="overlay hidden"><div class="panel">
+  <h1 id="endTitle"></h1><div id="endText"></div>
+  <button class="btn" id="again"></button><button class="btn ghost" id="toMenu"></button>
+</div></div>
+
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

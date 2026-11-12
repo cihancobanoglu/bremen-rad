@@ -1,0 +1,6 @@
+# Google API anahtarı – asla yüklenmez
+config.local.js
+# Ham OpenStreetMap indirmeleri (tools/ ile yeniden üretilebilir)
+data/raw/
+.DS_Store
+__pycache__/

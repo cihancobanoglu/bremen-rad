@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Modell-Inspektor</title>
+<style>html,body{margin:0;background:#222;color:#eee;font:13px Arial}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "../lib/three.module.min.js" } }</script>
+</head>
+<body>
+<!-- Entwickler-Werkzeug: laedt ein .glb und meldet Abmessungen und Teile.
+     Aufruf: tools/model-inspect.html, dann in der Konsole: await inspect('assets/models/indirilenler/bicycle.glb') -->
+<script type="module">
+import * as THREE from '../lib/three.module.min.js';
+import { GLTFLoader } from '../lib/addons/loaders/GLTFLoader.js';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(900, 600); renderer.setClearColor(0x8899aa);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(3, 5, 4); scene.add(sun);
+const loader = new GLTFLoader();
+let current = null;
+
+window.inspect = async (url, partNames = []) => {
+  if (current) scene.remove(current);
+  const g = await loader.loadAsync('../' + url);
+  current = g.scene; scene.add(current); current.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(current), size = box.getSize(new THREE.Vector3());
+  const parts = {};
+  current.traverse(o => {
+    if (partNames.some(p => o.name === p)) {
+      const b = new THREE.Box3().setFromObject(o);
+      parts[o.name] = { min: b.min.toArray().map(v => +v.toFixed(3)), max: b.max.toArray().map(v => +v.toFixed(3)) };
+    }
+  });
+  return { min: box.min.toArray().map(v => +v.toFixed(3)), max: box.max.toArray().map(v => +v.toFixed(3)), size: size.toArray().map(v => +v.toFixed(3)), parts, anims: g.animations.map(a => a.name + ':' + a.duration.toFixed(2)) };
+};
+// Ansicht aus Richtung dir (z.B. [1,0.3,0] = von +X)
+window.view = (dir) => {
+  const box = new THREE.Box3().setFromObject(current), c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length();
+  const cam = new THREE.PerspectiveCamera(35, 1.5, r / 100, r * 10);
+  cam.position.copy(c).add(new THREE.Vector3(...dir).normalize().multiplyScalar(r * 1.4)); cam.lookAt(c);
+  renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/jpeg', 0.8);
+};
+window.ready = true;
+</script>
+</body>
+</html>
